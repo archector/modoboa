@@ -13,7 +13,12 @@ WORKDIR /home/modoboa
 # Setup modoboa installation
 RUN virtualenv env
 RUN source env/bin/activate
-RUN pip install --no-cache-dir modoboa psycopg2
+RUN pip install --no-cache-dir MySQL-Python modoboa
+
+# Add custom logo here
+
+# Generate postfix maps and store them on known dir
+#RUN python manage.py generate_postfix_maps --destdir {{modoboa_media}}
 
 # Need to run these commands in the postgres container
 # We assume that the database, user and password are previously created

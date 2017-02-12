@@ -1,0 +1,106 @@
+# Development settings
+# docker-compose file for E-mail environment
+# To do:
+#   - Permit modoboa user to have permission on volume maildata:/var/mail
+#   - Set up the following envs in production file: MYSQL_RANDOM_ROOT_PASSWORD=yes
+#   - Add "condition: service_healthy" in the mysql container, in depends_on section
+#
+############################################################################################
+# 
+#   - Create container that builds from alpine, takes variables from yaml generator script
+#     and replaces them on the config folder in the corresponding container vars:
+#     - dovecot-sql.conf.ext:
+#       - check all variables depending on configured driver in http://modoboa.readthedocs.io/en/latest/manual_installation/dovecot.html
+#       - {{driver}} : mysql
+#       - {{connect}} : host=mysql dbname=modoboa user=modouser password=modopasswd
+#       - {{password_query}} : as config file states 
+#       - {{user_query}}: as config file states
+#       - {{iterate_query}}: as config file states
+#     - 20-lmtp.conf:
+#       - {{domain}} : domain.com
+#     - dovecot.conf:
+#       - {{driver}}: mysql
+#     - dovecot-dict-sql-conf.ext:
+#       - {{connect}}: host=mysql dbname=modoboa user=modouser password=modopasswd
+
+version: '3'
+
+services:
+
+  mysql:  
+    image: mysql
+    container_name: mysql
+    ports:
+      - "3306"
+    volumes:
+      - mysql:/var/lib/mysql
+    networks:
+      - mailenv
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=modoboa
+      - MYSQL_USER=modouser
+      - MYSQL_PASSWORD=modopasswd
+
+  mail:
+    image: tvial/docker-mailserver:latest
+    hostname: mail
+    domainname: domain.com
+    container_name: mail
+    depends_on:
+      - mysql
+    ports:
+    - "25:25"
+    - "143:143"
+    - "587:587"
+    - "993:993"
+    - "4190:4190"
+    volumes:
+    - maildata:/var/mail
+    - mailstate:/var/mail-state
+    - dovecotvol:/usr/sbin/dovecot
+    - ./config/:/tmp/docker-mailserver/
+    # Dovecot and postfix file mounts
+    - ./config/dovecot/10-auth.conf:/etc/dovecot/conf.d/10-auth.conf
+    - ./config/dovecot/10-mail.conf:/etc/dovecot/conf.d/10-mail.conf
+    - ./config/dovecot/10-master.conf:/etc/dovecot/conf.d/10-master.conf
+    - ./config/dovecot/10-ssl.conf:/etc/dovecot/conf.d/10-ssl.conf
+    - ./config/dovecot/15-lda.conf:/etc/dovecot/conf.d/15-lda.conf
+    - ./config/dovecot/20-imap.conf:/etc/dovecot/conf.d/20-imap.conf
+    - ./config/dovecot/20-lmtp.conf:/etc/dovecot/conf.d/20-lmtp.conf
+    - ./config/dovecot/20-managesieve.conf:/etc/dovecot/conf.d/20-managesieve.conf
+    - ./config/dovecot/90-quota.conf:/etc/dovecot/conf.d/90-quota.conf
+    - ./config/dovecot/90-sieve.conf:/etc/dovecot/conf.d/90-sieve.conf
+    - ./config/dovecot/auth-sql.conf.ext:/etc/dovecot/conf.d/auth-sql.conf.ext
+    - ./config/dovecot/dovecot.conf:/etc/dovecot/conf.d/dovecot.conf
+    - ./config/dovecot/dovecot-sql.conf.ext:/etc/dovecot/conf.d/dovecot-sql.conf.ext
+    - ./config/dovecot/dovecot-dict-sql.conf.ext:/etc/dovecot/conf.d/dovecot-dict-sql.conf.ext
+    - ./config/postfix/main.cf:/etc/postfix/main.cf
+    environment:
+    - ENABLE_SPAMASSASSIN=1
+    - ENABLE_CLAMAV=1
+    - ENABLE_FAIL2BAN=1
+    - ENABLE_POSTGREY=1
+    - ONE_DIR=1
+    - DMS_DEBUG=0
+    cap_add:
+    - NET_ADMIN
+
+
+volumes:
+  mysql:
+    driver: local
+  dovecotvol:
+    driver: local
+  maildata:
+    driver: local
+  mailstate:
+    driver: local
+  modoboa_media:
+    driver: local
+
+networks:
+  webproxy:
+  mailenv:
+
+  
