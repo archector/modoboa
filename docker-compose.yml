@@ -1,27 +1,6 @@
 # Development settings
 # docker-compose file for E-mail environment
-# To do:
-#   - Permit modoboa user to have permission on volume maildata:/var/mail
-#   - Set up the following envs in production file: MYSQL_RANDOM_ROOT_PASSWORD=yes
-#   - Add "condition: service_healthy" in the mysql container, in depends_on section
-#
-############################################################################################
-# 
-#   - Create container that builds from alpine, takes variables from yaml generator script
-#     and replaces them on the config folder in the corresponding container vars:
-#     - dovecot-sql.conf.ext:
-#       - check all variables depending on configured driver in http://modoboa.readthedocs.io/en/latest/manual_installation/dovecot.html
-#       - {{driver}} : mysql
-#       - {{connect}} : host=mysql dbname=modoboa user=modouser password=modopasswd
-#       - {{password_query}} : as config file states 
-#       - {{user_query}}: as config file states
-#       - {{iterate_query}}: as config file states
-#     - 20-lmtp.conf:
-#       - {{domain}} : domain.com
-#     - dovecot.conf:
-#       - {{driver}}: mysql
-#     - dovecot-dict-sql-conf.ext:
-#       - {{connect}}: host=mysql dbname=modoboa user=modouser password=modopasswd
+
 
 version: '3'
 
@@ -58,7 +37,7 @@ services:
     volumes:
     - maildata:/var/mail
     - mailstate:/var/mail-state
-    - dovecotvol:/usr/sbin/dovecot
+    - dovecotvol:/usr/sbin
     - ./config/:/tmp/docker-mailserver/
     # Dovecot and postfix file mounts
     - ./config/dovecot/10-auth.conf:/etc/dovecot/conf.d/10-auth.conf
@@ -86,6 +65,21 @@ services:
     cap_add:
     - NET_ADMIN
 
+  mailadmin:
+    build: .
+    depends_on: 
+      - mail
+    container_name: mailadmin
+    ports:
+      - "8000"
+    volumes:
+      - media:/media
+      - dovecotvol:/ext_dovecot
+      - maildata:/srv/vmail
+    networks:
+      - mailenv
+      - webproxy
+
 
 volumes:
   mysql:
@@ -96,11 +90,9 @@ volumes:
     driver: local
   mailstate:
     driver: local
-  modoboa_media:
+  media:
     driver: local
 
 networks:
   webproxy:
   mailenv:
-
-  
