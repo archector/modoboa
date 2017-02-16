@@ -14,7 +14,10 @@ services:
     volumes:
       - mysql:/var/lib/mysql
     networks:
-      - mailenv
+      mailenv:
+        aliases:
+          - db
+          - mysql
     environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_DATABASE=modoboa
@@ -55,6 +58,10 @@ services:
     - ./config/dovecot/dovecot-sql.conf.ext:/etc/dovecot/conf.d/dovecot-sql.conf.ext
     - ./config/dovecot/dovecot-dict-sql.conf.ext:/etc/dovecot/conf.d/dovecot-dict-sql.conf.ext
     - ./config/postfix/main.cf:/etc/postfix/main.cf
+    networks:
+      mailenv:
+        aliases:
+          - mail
     environment:
     - ENABLE_SPAMASSASSIN=1
     - ENABLE_CLAMAV=1
@@ -77,8 +84,14 @@ services:
       - dovecotvol:/ext_dovecot
       - maildata:/srv/vmail
     networks:
-      - mailenv
-      - webproxy
+      mailenv:
+        aliases:
+          - modoboa
+          - mailadmin
+      webproxy:
+        aliases:
+          - modoboa
+          - mailadmin
 
   
 
