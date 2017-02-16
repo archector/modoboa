@@ -13,20 +13,23 @@
 #		- postfix_dir
 
 # Default python image
-FROM python:2-onbuild
+FROM python:2
 
 # Add mobodoa user
-RUN useradd -ms /bin/bash modoboa
-USER modoboa
-WORKDIR /home/modoboa
+#RUN useradd -ms /bin/bash modoboa
+#RUN adduser -S modoboa
+#USER modoboa
+#WORKDIR /home/modoboa
 
 # Setup modoboa installation
-RUN virtualenv env
-RUN source env/bin/activate
-RUN pip install --no-cache-dir MySQL-Python modoboa
+#RUN virtualenv env
+#RUN . /home/modoboa/env/bin/activate
+RUN pip install --no-cache-dir modoboa
+RUN pip install --no-cache-dir MySQL-Python 
+RUN modoboa-admin.py help deploy
 RUN modoboa-admin.py deploy mailadmin --collectstatic \
-         --domain domain.com --dburl mysql://[modouser:modopasswd@][mysql:3306]/modoboa \
-         --lang es --timezone America/Caracas --extensions --admin-username modoadmin
+         --domain domain.com --dburl default:mysql://[modouser:modopasswd@][mysql:3306]/modoboa \
+         --lang es --timezone America/Caracas --extensions all --admin-username modoadmin
 
 
 # Add custom logo here

@@ -5,8 +5,8 @@ Dockerized mail environment
    - Permit modoboa user to have permission on volume maildata:/var/mail
    - Set up the following envs in production file: MYSQL_RANDOM_ROOT_PASSWORD=yes
    - Add "condition: service_healthy" in the mysql container, in depends_on section
-   - Cross-compare provided dovecot and postfix files with the injected ones
-
+   - Cross-compare provided dovecot and postfix files with the injected ones, for compatibility with postgrey, etc
+   - Create mysql amavis database and add it to the dburl in modoboa-admin.py deploy command
 
 Configurator container image: 
 
